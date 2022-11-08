@@ -50,3 +50,5 @@ forecasted_spark_df = data_selected_store_departments.groupby(['Station', 'DayLi
 forecasted_spark_df.show(10)
 
 print((forecasted_spark_df.count(), len(forecasted_spark_df.columns)))
+
+# forecasted_spark_df.write.csv('dataset/forecasted-noise-pollution-day.csv')

@@ -16,8 +16,8 @@ spark = SparkSession.builder.appName('TSF-noise-pollution').getOrCreate()
 data = spark.read.format('csv').options(header='true', inferSchema='true').load('dataset/station_month.csv').select('Year', 'Station', 'NightLimit', 'Night')
 
 schema = StructType([StructField('Station', StringType(), True),
-                    StructField('DayLimit', DoubleType(), True),
-                    StructField('Day', DoubleType(), True)])
+                    StructField('NightLimit', DoubleType(), True),
+                    StructField('Night', DoubleType(), True)])
 
 selected_com = data.groupBy(['Station','NightLimit']).count().filter("NightLimit > 0").select("Station","NightLimit")
 data_selected_store_departments = data.join(selected_com, ['Station','NightLimit'],'inner')
@@ -36,7 +36,7 @@ def holt_winters_time_series_udf(data):
     ##forecast values
     forecast_values = pd.Series(model_monthly.forecast(1),name = 'fitted_values')
     
-    return pd.DataFrame({'Station': [str(data.Station.iloc[0])], 'NightLimit': [int(data.DayLimit.iloc[1])], 'Night': [forecast_values[0]]})
+    return pd.DataFrame({'Station': [str(data.Station.iloc[0])], 'NightLimit': [int(data.NightLimit.iloc[1])], 'Night': [forecast_values[0]]})
 
 forecasted_spark_df = data_selected_store_departments.groupby(['Station', 'NightLimit']).apply(holt_winters_time_series_udf)
 
@@ -45,3 +45,5 @@ forecasted_spark_df = data_selected_store_departments.groupby(['Station', 'Night
 forecasted_spark_df.show(10)
 
 print((forecasted_spark_df.count(), len(forecasted_spark_df.columns)))
+
+# forecasted_spark_df.write.csv('dataset/forecasted-noise-pollution-night.csv')
